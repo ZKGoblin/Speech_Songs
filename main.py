@@ -3,32 +3,40 @@ import pyttsx3
 
 r = sr.Recognizer()
 
+r.energy_threshold = 300          
+r.dynamic_energy_threshold = False
+
 def record_text():
-    while(1):
-        try:
-            with sr.Microphone() as source2:
-                r.adjust_for_ambient_noise(source2, duration=0.2)
-                audio2 = r.listen(source2)
-                MyText = r.recognize_google(audio2)
-                return MyText
-            
-        except sr.RequestError as e:
-            print("could not request results; {0}".format(e))
-        except sr.UnknownValueError:
-            print("unknown error occurred")
-            
-    return
+    try:
+        with sr.Microphone() as source:
+            print("Listening...")
+            audio = r.listen(source, phrase_time_limit=5)
+
+            # Recognise speech
+            text = r.recognize_google(audio, language="en-GB")
+            print("Recognised:", text)
+            return text
+
+    except sr.RequestError as e:
+        print(f"Could not request results; {e}")
+    except sr.UnknownValueError:
+        print("Could not understand audio")
+
+    return None
 
 def output_text(text):
-    f = open("output.txt", "a")
-    f.write(text)
-    f.write("\n")
-    f.close()
-    return
+    if text is None:
+        return
 
-while(1):
+    with open("output.txt", "a", encoding="utf-8") as f:
+        f.write(text + "\n")
+
+with sr.Microphone() as source:
+    print("Calibrating microphone...")
+    r.adjust_for_ambient_noise(source, duration=1)
+    print("Calibration complete.")
+
+while True:
     text = record_text()
     output_text(text)
-    print("wrote text")
-            
-            
+    print("Wrote text\n")
